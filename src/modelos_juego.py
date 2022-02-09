@@ -4,6 +4,13 @@ from random import randint
 
 BLOCK_SIZE = 20
 
+#Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
 class Block:
 
     def __init__(self, posx, posy, color):
@@ -46,16 +53,19 @@ class Apple(Block):
 
 class Snake:
 
-    def __init__(self, parent_screen, color_screen, position_initial:tuple, color_blocks, length):
+    def __init__(self, parent_screen, color_screen, 
+        position_initial:tuple, color_blocks, color_head, length):
         self.length = length
         self.parent_screen = parent_screen
+
         self.color_screen = color_screen
         self.color = color_blocks
+        self.color_lose = None
         
         self.parts = []
         self._add_blocks(position_initial[0], position_initial[1])
         self.head:Block = self.parts[0]
-        self.head.color = (0, 0, 255)
+        self.head.color = color_head
 
         self.direction = 'down'
         self.prev_direction = None
@@ -79,16 +89,20 @@ class Snake:
         self.direction = new_dir
 
     def move_up(self):
-        self._change_direction('up')
+        if self.direction != 'down' or self.length <= 2:
+            self._change_direction('up')
     
     def move_down(self):
-        self._change_direction('down')
+        if self.direction != 'up' or self.length <= 2:
+            self._change_direction('down')
 
     def move_left(self):
-        self._change_direction('left')
+        if self.direction != 'right' or self.length <= 2:
+            self._change_direction('left')
 
     def move_right(self):
-        self._change_direction('right')
+        if self.direction != 'left' or self.length <= 2:
+            self._change_direction('right')
 
     def walk(self):
         for i in range(self.length-1, 0, -1):
@@ -106,12 +120,20 @@ class Snake:
         self.draw()
 
     def auto_collision(self):
-        if self.direction == 'down' and not self.prev_direction == 'up'\
-            or self.direction == 'up' and not self.prev_direction == 'down':
-            return self.head in self.parts[1:]
+        return self.head in self.parts[1:]
 
-        if self.direction == 'left' and not self.prev_direction == 'right'\
-            or self.direction == 'right' and not self.prev_direction == 'left':
-            return self.head in self.parts[1:]
-
+    def teleport(self):
+        if self.head.posx == self.parent_screen.get_size()[0]:
+            self.head.posx = 0
+        elif self.head.posx < 0:
+            self.head.posx = self.parent_screen.get_size()[0] - BLOCK_SIZE
         
+        if self.head.posy == self.parent_screen.get_size()[1]:
+            self.head.posy = 0
+        elif self.head.posy < 0:
+            self.head.posy = self.parent_screen.get_size()[1] - BLOCK_SIZE
+    
+    def change_color_lose(self, color):
+        self.head.color = color
+        self.head.draw_block(self.parent_screen)
+        pygame.display.update()
