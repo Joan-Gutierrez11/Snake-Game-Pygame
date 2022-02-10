@@ -1,4 +1,4 @@
-from modelos_juego import *
+from game_models import *
 from time import sleep
 
 class Game:
